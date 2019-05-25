@@ -83,6 +83,8 @@ class PMShell(cmd.Cmd):
 
         if arg in PMShell.IS_DEPENDENCY:
             print('    {} is still needed'.format(arg))
+        elif arg not in PMShell.INSTALLED_PACKAGES:
+            print('    {} is not installed'.format(arg))
         else:
             PMShell.INSTALLED_PACKAGES.remove(arg)
             print('    {} successfully removed'.format(arg))
