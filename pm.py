@@ -39,18 +39,18 @@ class PMShell(cmd.Cmd):
         pkg = pkg_list[0]
 
         # Package dependencies
-        if pkg in PMShell.DEPENDENCIES:
-            PMShell.DEPENDENCIES[pkg] = set(pkg_list[1:])
+        if pkg in self.DEPENDENCIES:
+            self.DEPENDENCIES[pkg] = set(pkg_list[1:])
         else:
-            PMShell.DEPENDENCIES[pkg] = set(pkg_list[1:])
+            self.DEPENDENCIES[pkg] = set(pkg_list[1:])
 
         # If package if dependency of
         for dep in pkg_list[1:]:
-            if dep in PMShell.IS_DEPENDENCY:
-                PMShell.IS_DEPENDENCY[dep].add(pkg)
+            if dep in self.IS_DEPENDENCY:
+                self.IS_DEPENDENCY[dep].add(pkg)
             else:
-                PMShell.IS_DEPENDENCY[dep] = set()
-                PMShell.IS_DEPENDENCY[dep].add(pkg)
+                self.IS_DEPENDENCY[dep] = set()
+                self.IS_DEPENDENCY[dep].add(pkg)
 
     def do_INSTALL(self, arg):
         if len(arg.split()) != 1:
@@ -58,19 +58,19 @@ class PMShell(cmd.Cmd):
             print('USAGE: INSTALL pkg')
             return
 
-        if arg not in PMShell.INSTALLED_PACKAGES:
-            if arg in PMShell.DEPENDENCIES:
-                for pkg_dep in PMShell.DEPENDENCIES[arg]:
-                    if pkg_dep not in PMShell.INSTALLED_PACKAGES:
-                        PMShell.INSTALLED_PACKAGES.add(pkg_dep)
+        if arg not in self.INSTALLED_PACKAGES:
+            if arg in self.DEPENDENCIES:
+                for pkg_dep in self.DEPENDENCIES[arg]:
+                    if pkg_dep not in self.INSTALLED_PACKAGES:
+                        self.INSTALLED_PACKAGES.add(pkg_dep)
                         print('    {} successfully installed'.format(pkg_dep))
 
                 # Install the package itself after install dependencies
-                PMShell.INSTALLED_PACKAGES.add(arg)
+                self.INSTALLED_PACKAGES.add(arg)
                 print('    {} successfully installed'.format(arg))
 
             else:
-                PMShell.INSTALLED_PACKAGES.add(arg)
+                self.INSTALLED_PACKAGES.add(arg)
                 print('    {} successfully installed'.format(arg))
         else:
             print('    {} is already installed'.format(arg))
@@ -81,49 +81,40 @@ class PMShell(cmd.Cmd):
             print('USAGE: REMOVE pkg')
             return
 
-        if arg in PMShell.IS_DEPENDENCY:
+        if arg in self.IS_DEPENDENCY:
             print('    {} is still needed'.format(arg))
-        elif arg not in PMShell.INSTALLED_PACKAGES:
+        elif arg not in self.INSTALLED_PACKAGES:
             print('    {} is not installed'.format(arg))
         else:
-            PMShell.INSTALLED_PACKAGES.remove(arg)
+            self.INSTALLED_PACKAGES.remove(arg)
             print('    {} successfully removed'.format(arg))
+
+            # Check dependencies and delete its from its dependencies list
+            if arg in self.DEPENDENCIES:
+                for dep in self.DEPENDENCIES[arg]:
+                    # If a package is saved as dependency of other package
+                    if arg in self.IS_DEPENDENCY[dep]:
+                        self.IS_DEPENDENCY[dep].remove(arg)
+                        if (dep in self.IS_DEPENDENCY) and (len(self.IS_DEPENDENCY[dep]) == 0):
+                            print('    {} is no longer needed'.format(dep))
+                            self.IS_DEPENDENCY.pop(dep)
+                            self.do_REMOVE(dep)
 
     def do_LIST(self, arg):
         if len(arg.split()) != 0:
             print('Arguments are not accepted')
             return
 
-        for pkg in PMShell.INSTALLED_PACKAGES:
+        for pkg in self.INSTALLED_PACKAGES:
             print('    {}'.format(pkg))
 
     def do_END(self):
         return True
 
-    def help_DEPEND(self):
-        print("Add new packages")
-
-    def help_INSTALL(self):
-        print('Only one package a time')
-
     def do_DEBUG(self, arg):
-        print('INSTALLED_PACKAGES = {}'.format(PMShell.INSTALLED_PACKAGES))
-        print('DEPENDENCIES = {}'.format(PMShell.DEPENDENCIES))
-        print('IS_DEPENDENCY = {}'.format(PMShell.IS_DEPENDENCY))
-
-    def __install(self, pkg):
-
-        # Package has dependencies
-        if pkg in PMShell.DEPENDENCIES:
-
-            # Check every dependency to see if is installed
-            for pkg_dep in PMShell.DEPENDENCIES[pkg]:
-                if pkg_dep not in PMShell.INSTALLED_PACKAGES:
-                    PMShell.INSTALLED_PACKAGES.add(pkg_dep)
-                    print('    {} successfully installed'.format(pkg_dep))
-        else:
-            PMShell.INSTALLED_PACKAGES.add(pkg_dep)
-            print('    {} successfully installed'.format(pkg_dep))
+        print('INSTALLED_PACKAGES = {}'.format(self.INSTALLED_PACKAGES))
+        print('DEPENDENCIES = {}'.format(self.DEPENDENCIES))
+        print('IS_DEPENDENCY = {}'.format(self.IS_DEPENDENCY))
 
 
 if __name__ == "__main__":
