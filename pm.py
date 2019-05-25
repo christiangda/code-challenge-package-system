@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 import cmd
 
 
@@ -37,10 +38,7 @@ class PMShell(cmd.Cmd):
         pkg = pkg_list[0]
 
         # Package dependencies
-        if pkg in self.DEPENDENCIES:
-            self.DEPENDENCIES[pkg] = set(pkg_list[1:])
-        else:
-            self.DEPENDENCIES[pkg] = set(pkg_list[1:])
+        self.DEPENDENCIES[pkg] = set(pkg_list[1:])
 
         # If package is dependency of
         for dep in pkg_list[1:]:
@@ -56,10 +54,15 @@ class PMShell(cmd.Cmd):
             print('USAGE: INSTALL pkg')
             return
 
+        # Install the package if not installed
         if arg not in self.INSTALLED_PACKAGES:
+            # Package has dependencies?
             if arg in self.DEPENDENCIES:
+                # Check package dependencies too
                 for pkg_dep in self.DEPENDENCIES[arg]:
+                    # Dependency package is not installed yet?
                     if pkg_dep not in self.INSTALLED_PACKAGES:
+                        # Call this function again
                         self.INSTALLED_PACKAGES.add(pkg_dep)
                         print('    {} successfully installed'.format(pkg_dep))
 
@@ -68,34 +71,44 @@ class PMShell(cmd.Cmd):
                 print('    {} successfully installed'.format(arg))
 
             else:
+                # Install the package
                 self.INSTALLED_PACKAGES.add(arg)
                 print('    {} successfully installed'.format(arg))
         else:
+            # Package were installed
             print('    {} is already installed'.format(arg))
 
     def do_REMOVE(self, arg):
         if len(arg.split()) != 1:
-            print('Could not be empty or more than one package a time')
+            print('Cannot be empty or more than one package a time')
             print('USAGE: REMOVE pkg')
             return
 
+        # Package is a dependency of other package?
         if arg in self.IS_DEPENDENCY:
             print('    {} is still needed'.format(arg))
+        # Package is not installed?
         elif arg not in self.INSTALLED_PACKAGES:
             print('    {} is not installed'.format(arg))
         else:
+            # PAckage is installed, so remove it
             self.INSTALLED_PACKAGES.remove(arg)
             print('    {} successfully removed'.format(arg))
 
             # Check dependencies and delete its from its dependencies list
+            # Package has dependencies?
             if arg in self.DEPENDENCIES:
+                # Check every package dependency
                 for dep in self.DEPENDENCIES[arg]:
-                    # If a package is saved as dependency of other package
+                    # package is dependency of others packages?
                     if arg in self.IS_DEPENDENCY[dep]:
+                        # remove package from reverse dependency list
                         self.IS_DEPENDENCY[dep].remove(arg)
+                        # If package reverse dependency is empty, remove it from set
                         if (dep in self.IS_DEPENDENCY) and (len(self.IS_DEPENDENCY[dep]) == 0):
                             print('    {} is no longer needed'.format(dep))
                             self.IS_DEPENDENCY.pop(dep)
+                            # call this function again for every dependency
                             self.do_REMOVE(dep)
 
     def do_LIST(self, arg):
@@ -116,4 +129,5 @@ class PMShell(cmd.Cmd):
 
 
 if __name__ == "__main__":
-    PMShell().cmdloop()
+    pm = PMShell()
+    pm.cmdloop()
