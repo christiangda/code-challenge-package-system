@@ -3,39 +3,54 @@ import cmd
 
 class PMShell(cmd.Cmd):
     """
-    My memory structure for DEPENDECIES is a dict where key is a pkg and value is a list of pkgs dependencies:
+    My memory structure for DEPENDENCIES is a dict where key is a pkg and value is a list of pkgs dependencies:
+
+    # Storage for packages dependencies
     DEPENDENCIES =
             {
-            'pkg1': ['pkg2', 'pkg4'],
-            'pkg2': ['pkg3', 'pkg4'],
-            'pkg3': [],
-            'pkg4': ['pkg3']
+                'pkg1': ['pkg2', 'pkg4'],
+                'pkg2': ['pkg3', 'pkg4'],
+                'pkg3': [],
+                'pkg4': ['pkg3']
             }
 
-    # Set is an unordered collection with no duplicate elements.
+    # Storage for who depend of witch package
+    IS_DEPENDENCY =
+            {
+                'pkg4': ['pkg1','pkg2']
+            }
+
+    # Storage for packages installed
     INSTALLED_PACKAGES = {'pkg1', 'pkg2'}
 
     """
     DEPENDENCIES = dict()
     INSTALLED_PACKAGES = set()
+    IS_DEPENDENCY = dict()
 
     prompt = '(PM)>'
 
     def do_DEPEND(self, arg):
-        print('DEPEND {}'.format(arg))
         pkg_list = arg.split()
         if len(pkg_list) < 2:
             print('USAGE: DEPEND pkg1 pkg2 [pkg3 ...]')
             return
 
         pkg = pkg_list[0]
-        if pkg in PMShell.DEPENDENCIES:
-            PMShell.DEPENDENCIES[pkg] = pkg_list[1:]
-        else:
-            PMShell.DEPENDENCIES[pkg] = list()
-            PMShell.DEPENDENCIES[pkg] = pkg_list[1:]
 
-        # print(PMShell.DEPENDENCIES)
+        # Package dependencies
+        if pkg in PMShell.DEPENDENCIES:
+            PMShell.DEPENDENCIES[pkg] = set(pkg_list[1:])
+        else:
+            PMShell.DEPENDENCIES[pkg] = set(pkg_list[1:])
+
+        # If package if dependency of
+        for dep in pkg_list[1:]:
+            if dep in PMShell.IS_DEPENDENCY:
+                PMShell.IS_DEPENDENCY[dep].add(pkg)
+            else:
+                PMShell.IS_DEPENDENCY[dep] = set()
+                PMShell.IS_DEPENDENCY[dep].add(pkg)
 
     def do_INSTALL(self, arg):
         if len(arg.split()) != 1:
@@ -44,12 +59,7 @@ class PMShell(cmd.Cmd):
             return
 
         if arg not in PMShell.INSTALLED_PACKAGES:
-            """
-                If package if not installed, firs install its dependencies
-                but if doesn't has dependencies, install it
-            """
             if arg in PMShell.DEPENDENCIES:
-
                 for pkg_dep in PMShell.DEPENDENCIES[arg]:
                     if pkg_dep not in PMShell.INSTALLED_PACKAGES:
                         PMShell.INSTALLED_PACKAGES.add(pkg_dep)
@@ -62,6 +72,8 @@ class PMShell(cmd.Cmd):
             else:
                 PMShell.INSTALLED_PACKAGES.add(arg)
                 print('    {} successfully installed'.format(arg))
+        else:
+            print('    {} is already installed'.format(arg))
 
     def do_REMOVE(self, arg):
         if len(arg.split()) != 1:
@@ -69,8 +81,11 @@ class PMShell(cmd.Cmd):
             print('USAGE: REMOVE pkg')
             return
 
-        if arg in PMShell.DEPENDENCIES:
+        if arg in PMShell.IS_DEPENDENCY:
+            print('    {} is still needed'.format(arg))
+        else:
             PMShell.INSTALLED_PACKAGES.remove(arg)
+            print('    {} successfully removed'.format(arg))
 
     def do_LIST(self, arg):
         if len(arg.split()) != 0:
@@ -92,6 +107,7 @@ class PMShell(cmd.Cmd):
     def do_DEBUG(self, arg):
         print('INSTALLED_PACKAGES = {}'.format(PMShell.INSTALLED_PACKAGES))
         print('DEPENDENCIES = {}'.format(PMShell.DEPENDENCIES))
+        print('IS_DEPENDENCY = {}'.format(PMShell.IS_DEPENDENCY))
 
     def __install(self, pkg):
 
