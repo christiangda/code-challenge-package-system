@@ -3,32 +3,29 @@ import cmd
 
 class PMShell(cmd.Cmd):
     """
-    My memory structure for DEPENDENCIES is a dict where key is a pkg and value is a list of pkgs dependencies:
-
     # Storage for packages dependencies
     DEPENDENCIES =
             {
-                'pkg1': ['pkg2', 'pkg4'],
-                'pkg2': ['pkg3', 'pkg4'],
-                'pkg3': [],
-                'pkg4': ['pkg3']
+                'pkg1': {'pkg2', 'pkg4'},
+                'pkg2': {'pkg3', 'pkg4'},
+                'pkg4': {'pkg1','pkg3'}
             }
 
-    # Storage for who depend of witch package
+    # Storage for who depend on which package
     IS_DEPENDENCY =
             {
-                'pkg4': ['pkg1','pkg2']
+                'pkg4': {'pkg1','pkg2'}
             }
 
     # Storage for packages installed
     INSTALLED_PACKAGES = {'pkg1', 'pkg2'}
-
     """
+
     DEPENDENCIES = dict()
     INSTALLED_PACKAGES = set()
     IS_DEPENDENCY = dict()
 
-    prompt = '(PM)>'
+    prompt = '(Package Manager)-->'
 
     def do_DEPEND(self, arg):
         pkg_list = arg.split()
@@ -44,7 +41,7 @@ class PMShell(cmd.Cmd):
         else:
             self.DEPENDENCIES[pkg] = set(pkg_list[1:])
 
-        # If package if dependency of
+        # If package is dependency of
         for dep in pkg_list[1:]:
             if dep in self.IS_DEPENDENCY:
                 self.IS_DEPENDENCY[dep].add(pkg)
@@ -108,7 +105,7 @@ class PMShell(cmd.Cmd):
         for pkg in self.INSTALLED_PACKAGES:
             print('    {}'.format(pkg))
 
-    def do_END(self):
+    def do_END(self, arg):
         return True
 
     def do_DEBUG(self, arg):
