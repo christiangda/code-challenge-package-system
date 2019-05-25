@@ -8,13 +8,14 @@ class PMShell(cmd.Cmd):
             {
                 'pkg1': {'pkg2', 'pkg4'},
                 'pkg2': {'pkg3', 'pkg4'},
+                'pkg3': {'pkg1','pkg2'}
                 'pkg4': {'pkg1','pkg3'}
             }
 
     # Storage for who depend on which package
     IS_DEPENDENCY =
             {
-                'pkg4': {'pkg1','pkg2'}
+                'pkg4': {'pkg1','pkg3'}
             }
 
     # Storage for packages installed
