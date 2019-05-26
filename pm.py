@@ -122,6 +122,10 @@ class PMShell(cmd.Cmd):
     def do_END(self, arg):
         return True
 
+    def do_EOF(self, arg):
+        print()
+        return True
+
     def do_DEBUG(self, arg):
         print('INSTALLED_PACKAGES = {}'.format(self.INSTALLED_PACKAGES))
         print('DEPENDENCIES = {}'.format(self.DEPENDENCIES))
